@@ -4,15 +4,126 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    android:layout_alignParentStart="true"
+    tools:context=".MainActivity"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintLeft_toLeftOf="parent"
+    app:layout_constraintRight_toRightOf="parent"
+    app:layout_constraintTop_toTopOf="parent"
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/Title"
+    android:layout_alignParentLeft="true">
+
+    <View
+        android:id="@+id/rectangle_1"
+        android:layout_width="411dp"
+        android:layout_height="731dp"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="-24dp"
+        android:background="@drawable/rectangle_1"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.075" />
+
+    <!-- app:layout_constraintVertical_bias="0.075" -->
+
+
+    <View
+        android:id="@+id/rectangle_"
+        android:layout_width="285dp"
+        android:layout_height="94dp"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true"
+        android:background="@drawable/rectangle_4"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="0.736"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.709" />
+
+    <View
+        android:id="@+id/rectangle_4"
+        android:layout_width="286dp"
+        android:layout_height="53dp"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true"
+        android:background="@drawable/rectangle_4"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="0.736"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/take_a_phot"
+        android:layout_width="228dp"
+        android:layout_height="49dp"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true"
+        android:fontFamily="Fredoka One"
+        android:gravity="right|center_horizontal|center_vertical"
+        android:lineHeight="29sp"
+        android:text="@string/take_a_phot"
+        android:textAppearance="@style/take_a_phot"
+        app:fontFamily="@font/fredoka_one"
+        app:layout_constraintBottom_toBottomOf="@id/rectangle_4"
+        app:layout_constraintHorizontal_bias="0.206"
+        app:layout_constraintLeft_toLeftOf="@id/rectangle_4"
+        app:layout_constraintRight_toRightOf="@id/rectangle_4"
+        app:layout_constraintTop_toTopOf="@id/rectangle_4"
+        app:layout_constraintVertical_bias="1.0"
+        tools:text="@string/take_a_phot" />
+
+    <TextView
+        android:id="@+id/take_a_phot2"
+        android:layout_width="231dp"
+        android:layout_height="76dp"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true"
+        android:fontFamily="Fredoka One"
+        android:gravity="center_horizontal|center_vertical"
+        android:lineHeight="29sp"
+        android:text="@string/gallery"
+        android:textAppearance="@style/take_a_phot"
+        app:fontFamily="@font/fredoka_one"
+        app:layout_constraintBottom_toBottomOf="@+id/rectangle_"
+        app:layout_constraintEnd_toEndOf="@+id/rectangle_"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintLeft_toLeftOf="@id/rectangle_4"
+        app:layout_constraintRight_toRightOf="@id/rectangle_4"
+        app:layout_constraintStart_toStartOf="@+id/rectangle_"
+        app:layout_constraintTop_toTopOf="@+id/rectangle_"
+        app:layout_constraintVertical_bias="1.0"
+        tools:text="@string/gallery" />
+
+    <TextView
+    android:id="@+id/capgen"
+    android:layout_width="267dp"
+    android:layout_height="99dp"
+    android:layout_alignParentLeft="true"
+    android:layout_alignParentTop="true"
+    android:layout_marginLeft="85dp"
+    android:layout_marginTop="133dp"
+    android:gravity="top"
+    android:text="@string/capgen"
+    android:textAppearance="@style/capgen"
+    app:fontFamily="@font/fredoka_one"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintHorizontal_bias="0.114"
+    app:layout_constraintLeft_toLeftOf="parent"
+    app:layout_constraintRight_toRightOf="parent"
+    app:layout_constraintTop_toTopOf="parent"
+    app:layout_constraintVertical_bias="0.074" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

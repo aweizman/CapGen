@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">CapGen</string>
-    <string name="Title">CodeGen</string>
+    <string name="Title">CapGen</string>
+    <string name="capgen">CapGen</string>
+    <string name="take_a_phot">Take a Photo</string>
+    <string name="gallery">Choose from Gallery</string>
 </resources>
+
