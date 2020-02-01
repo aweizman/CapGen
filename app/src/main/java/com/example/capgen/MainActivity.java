@@ -14,7 +14,9 @@ import android.provider.MediaStore;
 import android.widget.ImageView;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -26,6 +28,7 @@ import com.google.cloud.vision.v1.Feature;
 import com.google.cloud.vision.v1.Feature.Type;
 import com.google.cloud.vision.v1.Image;
 import com.google.cloud.vision.v1.ImageAnnotatorClient;
+import com.google.cloud.vision.v1.WebDetection;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Descriptors;
 
@@ -116,9 +119,83 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
     }
-
+//Vision Web Detection API
+    // FIXME: make sure file read is file that was just added from pic. Call fxn from onActivityResult?
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    public void test(String...args) throws Exception {
+    /**
+     * Finds references to the specified image on the web.
+     *
+     * @param filePath The path to the local file used for web annotation detection.
+     * @param out A {@link PrintStream} to write the results to.
+     * @throws Exception on errors while closing the client.
+     * @throws IOException on Input/Output errors.
+     */
+    //filePath currentPhotoPath
+    public static void detectWebDetections(String filePath, PrintStream out) throws Exception,
+            IOException {
+        List<AnnotateImageRequest> requests = new ArrayList<>();
+
+        ByteString imgBytes = ByteString.readFrom(new FileInputStream(filePath));
+
+        Image img = Image.newBuilder().setContent(imgBytes).build();
+        Feature feat = Feature.newBuilder().setType(Type.WEB_DETECTION).build();
+        AnnotateImageRequest request =
+                AnnotateImageRequest.newBuilder().addFeatures(feat).setImage(img).build();
+        requests.add(request);
+
+        try (ImageAnnotatorClient client = ImageAnnotatorClient.create()) {
+            BatchAnnotateImagesResponse response = client.batchAnnotateImages(requests);
+            List<AnnotateImageResponse> responses = response.getResponsesList();
+
+            for (AnnotateImageResponse res : responses) {
+                if (res.hasError()) {
+                    out.printf("Error: %s\n", res.getError().getMessage());
+                    return;
+                }
+
+                // Search the web for usages of the image. You could use these signals later
+                // for user input moderation or linking external references.
+                // For a full list of available annotations, see http://g.co/cloud/vision/docs
+                WebDetection annotation = res.getWebDetection();
+                out.println("Entity:Id:Score");
+                out.println("===============");
+                for (WebDetection.WebEntity entity : annotation.getWebEntitiesList()) {
+                    out.println(entity.getDescription() + " : " + entity.getEntityId() + " : "
+                            + entity.getScore());
+                }
+                for (WebDetection.WebLabel label : annotation.getBestGuessLabelsList()) {
+                    out.format("\nBest guess label: %s", label.getLabel());
+                }
+                out.println("\nPages with matching images: Score\n==");
+                for (WebDetection.WebPage page : annotation.getPagesWithMatchingImagesList()) {
+                    out.println(page.getUrl() + " : " + page.getScore());
+                }
+                out.println("\nPages with partially matching images: Score\n==");
+                for (WebDetection.WebImage image : annotation.getPartialMatchingImagesList()) {
+                    out.println(image.getUrl() + " : " + image.getScore());
+                }
+                out.println("\nPages with fully matching images: Score\n==");
+                for (WebDetection.WebImage image : annotation.getFullMatchingImagesList()) {
+                    out.println(image.getUrl() + " : " + image.getScore());
+                }
+                out.println("\nPages with visually similar images: Score\n==");
+                for (WebDetection.WebImage image : annotation.getVisuallySimilarImagesList()) {
+                    out.println(image.getUrl() + " : " + image.getScore());
+                }
+            }
+        }
+    }
+/*    public void test(String filePath, PrintStream out) throws IOException {
+        List<AnnotateImageRequest> requests = new ArrayList<>();
+
+        ByteString imgBytes = ByteString.readFrom(new FileInputStream(filePath));
+
+        Image img = Image.newBuilder().setContent(imgBytes).build();
+        Feature feat = Feature.newBuilder().setType(Type.WEB_DETECTION).build();
+        AnnotateImageRequest request =
+                AnnotateImageRequest.newBuilder().addFeatures(feat).setImage(img).build();
+        requests.add(request);
+
 // Instantiates a client
         try (ImageAnnotatorClient vision = ImageAnnotatorClient.create()) {
 
@@ -134,19 +211,8 @@ public class MainActivity extends AppCompatActivity {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 data = Files.readAllBytes(path);
             }
-            ByteString imgBytes = ByteString.copyFrom(data);
 
-            // Builds the image annotation request
-            List<AnnotateImageRequest> requests = new ArrayList<>();
-            Image img = Image.newBuilder().setContent(imgBytes).build();
-            Feature feat = Feature.newBuilder().setType(Type.LABEL_DETECTION).build();
-            AnnotateImageRequest request = AnnotateImageRequest.newBuilder()
-                    .addFeatures(feat)
-                    .setImage(img)
-                    .build();
-            requests.add(request);
-
-            // Performs label detection on the image file
+            // Performs label detection on the image file (maybe
             BatchAnnotateImagesResponse response = vision.batchAnnotateImages(requests);
             List<AnnotateImageResponse> responses = response.getResponsesList();
 
@@ -155,16 +221,36 @@ public class MainActivity extends AppCompatActivity {
                     System.out.printf("Error: %s\n", res.getError().getMessage());
                     return;
                 }
-
-                for (EntityAnnotation annotation : res.getLabelAnnotationsList()) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        annotation.getAllFields().forEach((k, v) ->
-                                System.out.printf("%s : %s\n", k, v.toString()));
-                    }
+                WebDetection annotation = res.getWebDetection();
+                out.println("Entity:Id:Score");
+                out.println("===============");
+                for (WebDetection.WebEntity entity : annotation.getWebEntitiesList()) {
+                    out.println(entity.getDescription() + " : " + entity.getEntityId() + " : "
+                            + entity.getScore());
                 }
+                for (WebDetection.WebLabel label : annotation.getBestGuessLabelsList()) {
+                    out.format("\nBest guess label: %s", label.getLabel());
+                }
+                out.println("\nPages with matching images: Score\n==");
+                for (WebDetection.WebPage page : annotation.getPagesWithMatchingImagesList()) {
+                    out.println(page.getUrl() + " : " + page.getScore());
+                }
+                out.println("\nPages with partially matching images: Score\n==");
+                    out.println(image.getUrl() + " : " + image.getScore());
+                }
+                out.println("\nPages with fully matching images: Score\n==");
+                for (WebDetection.WebImage image : annotation.getFullMatchingImagesList()) {
+                    out.println(image.getUrl() + " : " + image.getScore());
+                }
+                out.println("\nPages with visually similar images: Score\n==");
+                for (WebDetection.WebImage image : annotation.getVisuallySimilarImagesList()) {
+                    out.println(image.getUrl() + " : " + image.getScore());
+                }
+            }
+
             }
         }
 
-
+        */
     }
-}
+

@@ -35,7 +35,9 @@ android {
         targetCompatibility = 1.8
     }
 }
-
+repositories {
+    mavenCentral()
+}
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.appcompat:appcompat:1.0.2'
@@ -45,4 +47,5 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
     implementation 'com.google.cloud:google-cloud-vision:1.99.1'
     implementation 'com.android.support:multidex:1.0.3'
+    //implementation 'com.google.apis:google-api-services-vision:v1-rev20191213-1.30.3'
 }
