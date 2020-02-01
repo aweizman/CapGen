@@ -15,6 +15,7 @@ import android.widget.ImageView;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
@@ -110,6 +111,14 @@ public class MainActivity extends AppCompatActivity {
             Bundle extras = data.getExtras();
             Bitmap imageBitmap = (Bitmap) extras.get("data");
             imageView.setImageBitmap(imageBitmap);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                String out[] = new String[2];
+                try {
+                    detectWebDetections(currentPhotoPath, out);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
@@ -130,9 +139,9 @@ public class MainActivity extends AppCompatActivity {
      * @throws Exception on errors while closing the client.
      * @throws IOException on Input/Output errors.
      */
-    //filePath currentPhotoPath
-    public static void detectWebDetections(String filePath, PrintStream out) throws Exception,
-            IOException {
+    //filePath = currentPhotoPath when called, output gets array which calls code to find quotes in DB
+    public static void detectWebDetections(String filePath, String[] out) throws Exception,
+            Exception {
         List<AnnotateImageRequest> requests = new ArrayList<>();
 
         ByteString imgBytes = ByteString.readFrom(new FileInputStream(filePath));
@@ -149,7 +158,7 @@ public class MainActivity extends AppCompatActivity {
 
             for (AnnotateImageResponse res : responses) {
                 if (res.hasError()) {
-                    out.printf("Error: %s\n", res.getError().getMessage());
+                    out[0] = ("Error: " + res.getError().getMessage());
                     return;
                 }
 
@@ -157,31 +166,16 @@ public class MainActivity extends AppCompatActivity {
                 // for user input moderation or linking external references.
                 // For a full list of available annotations, see http://g.co/cloud/vision/docs
                 WebDetection annotation = res.getWebDetection();
-                out.println("Entity:Id:Score");
-                out.println("===============");
+                int i = 0;
                 for (WebDetection.WebEntity entity : annotation.getWebEntitiesList()) {
-                    out.println(entity.getDescription() + " : " + entity.getEntityId() + " : "
+                    out[i] = (entity.getDescription() + " : " + entity.getEntityId() + " : "
                             + entity.getScore());
+                    i++;
+                    if (i == 2){
+                        break;
+                    }
                 }
-                for (WebDetection.WebLabel label : annotation.getBestGuessLabelsList()) {
-                    out.format("\nBest guess label: %s", label.getLabel());
-                }
-                out.println("\nPages with matching images: Score\n==");
-                for (WebDetection.WebPage page : annotation.getPagesWithMatchingImagesList()) {
-                    out.println(page.getUrl() + " : " + page.getScore());
-                }
-                out.println("\nPages with partially matching images: Score\n==");
-                for (WebDetection.WebImage image : annotation.getPartialMatchingImagesList()) {
-                    out.println(image.getUrl() + " : " + image.getScore());
-                }
-                out.println("\nPages with fully matching images: Score\n==");
-                for (WebDetection.WebImage image : annotation.getFullMatchingImagesList()) {
-                    out.println(image.getUrl() + " : " + image.getScore());
-                }
-                out.println("\nPages with visually similar images: Score\n==");
-                for (WebDetection.WebImage image : annotation.getVisuallySimilarImagesList()) {
-                    out.println(image.getUrl() + " : " + image.getScore());
-                }
+
             }
         }
     }
