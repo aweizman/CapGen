@@ -44,6 +44,7 @@ import java.util.function.BiConsumer;
 public class MainActivity extends AppCompatActivity {
     static final int REQUEST_IMAGE_CAPTURE = 1;
     private ImageView imageView;
+    captionBot cBot = new captionBot();
 
 
    /* private void dispatchTakePictureIntent() { //will create the intent to take a picture w/ camera
@@ -114,7 +115,8 @@ public class MainActivity extends AppCompatActivity {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                 String out[] = new String[2];
                 try {
-                    detectWebDetections(currentPhotoPath, out);
+                    out = detectWebDetections(currentPhotoPath, out);
+                    cBot.main(out);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -139,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
      * @throws IOException on Input/Output errors.
      */
     //filePath = currentPhotoPath when called, output gets array which calls code to find quotes in DB
-    public static void detectWebDetections(String filePath, String[] out) throws Exception,
+    public static String[] detectWebDetections(String filePath, String[] out) throws Exception,
             Exception {
         List<AnnotateImageRequest> requests = new ArrayList<>();
 
@@ -156,19 +158,19 @@ public class MainActivity extends AppCompatActivity {
             List<AnnotateImageResponse> responses = response.getResponsesList();
 
             for (AnnotateImageResponse res : responses) {
+                int i = 0;
                 if (res.hasError()) {
-                    out[0] = ("Error: " + res.getError().getMessage());
-                    return;
+                    out[i] = ("Error: " + res.getError().getMessage());
+                    return out;
                 }
 
                 // Search the web for usages of the image. You could use these signals later
                 // for user input moderation or linking external references.
                 // For a full list of available annotations, see http://g.co/cloud/vision/docs
                 WebDetection annotation = res.getWebDetection();
-                int i = 0;
+
                 for (WebDetection.WebEntity entity : annotation.getWebEntitiesList()) {
-                    out[i] = (entity.getDescription() + " : " + entity.getEntityId() + " : "
-                            + entity.getScore());
+                    out[i] = (entity.getDescription());
                     i++;
                     if (i == 2){
                         break;
@@ -177,6 +179,7 @@ public class MainActivity extends AppCompatActivity {
 
             }
         }
+        return out;
     }
 /*    public void test(String filePath, PrintStream out) throws IOException {
         List<AnnotateImageRequest> requests = new ArrayList<>();
