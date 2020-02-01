@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
                 photoFile = createImageFile();
             } catch (IOException ex) {
                 // Error occurred while creating the File
-                //FIXME: make an actual response
+                ex.printStackTrace();
             }
             // Continue only if the File was successfully created
             if (photoFile != null) {
@@ -129,7 +129,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
     }
 //Vision Web Detection API
-    // FIXME: make sure file read is file that was just added from pic. Call fxn from onActivityResult?
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     /**
      * Finds references to the specified image on the web.
