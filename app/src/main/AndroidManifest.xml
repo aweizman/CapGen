@@ -3,6 +3,14 @@
     package="com.example.capgen">
     <uses-feature android:name="android.hardware.camera"
         android:required="true" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <?xml version="1.0" encoding="utf-8"?>
+    <paths xmlns:android="http://schemas.android.com/apk/res/android">
+        <external-files-path android:name="my_images" android:path="Android/data/com.example.package.capgen/files/Pictures" />
+    </paths>
+
+
+
 
 
     <application
@@ -12,6 +20,15 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.example.android.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
