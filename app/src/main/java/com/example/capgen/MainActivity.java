@@ -1,11 +1,13 @@
 package com.example.capgen;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -15,6 +17,25 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import com.google.cloud.vision.v1.AnnotateImageRequest;
+import com.google.cloud.vision.v1.AnnotateImageResponse;
+import com.google.cloud.vision.v1.BatchAnnotateImagesResponse;
+import com.google.cloud.vision.v1.EntityAnnotation;
+import com.google.cloud.vision.v1.Feature;
+import com.google.cloud.vision.v1.Feature.Type;
+import com.google.cloud.vision.v1.Image;
+import com.google.cloud.vision.v1.ImageAnnotatorClient;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.Descriptors;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.BiConsumer;
+
 
 public class MainActivity extends AppCompatActivity {
     static final int REQUEST_IMAGE_CAPTURE = 1;
@@ -71,6 +92,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void galleryAddPic() {
+        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        File f = new File(currentPhotoPath);
+        Uri contentUri = Uri.fromFile(f);
+        mediaScanIntent.setData(contentUri);
+        this.sendBroadcast(mediaScanIntent);
+    }
 
 
     @Override
@@ -89,5 +117,54 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    public void test(String...args) throws Exception {
+// Instantiates a client
+        try (ImageAnnotatorClient vision = ImageAnnotatorClient.create()) {
 
+            // The path to the image file to annotate
+            String fileName = currentPhotoPath;
+
+            // Reads the image file into memory
+            Path path = null;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                path = Paths.get(fileName);
+            }
+            byte[] data = new byte[0];
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                data = Files.readAllBytes(path);
+            }
+            ByteString imgBytes = ByteString.copyFrom(data);
+
+            // Builds the image annotation request
+            List<AnnotateImageRequest> requests = new ArrayList<>();
+            Image img = Image.newBuilder().setContent(imgBytes).build();
+            Feature feat = Feature.newBuilder().setType(Type.LABEL_DETECTION).build();
+            AnnotateImageRequest request = AnnotateImageRequest.newBuilder()
+                    .addFeatures(feat)
+                    .setImage(img)
+                    .build();
+            requests.add(request);
+
+            // Performs label detection on the image file
+            BatchAnnotateImagesResponse response = vision.batchAnnotateImages(requests);
+            List<AnnotateImageResponse> responses = response.getResponsesList();
+
+            for (AnnotateImageResponse res : responses) {
+                if (res.hasError()) {
+                    System.out.printf("Error: %s\n", res.getError().getMessage());
+                    return;
+                }
+
+                for (EntityAnnotation annotation : res.getLabelAnnotationsList()) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        annotation.getAllFields().forEach((k, v) ->
+                                System.out.printf("%s : %s\n", k, v.toString()));
+                    }
+                }
+            }
+        }
+
+
+    }
 }
