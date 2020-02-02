@@ -3,7 +3,15 @@
     package="com.example.capgen">
     <uses-feature android:name="android.hardware.camera"
         android:required="true" />
+    <!--<uses-permission android:name="android.permission.CAMERA" />-->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-feature
+        android:name="android.hardware.camera.any"
+        android:required="true" />
+    <uses-feature
+        android:name="android.hardware.camera.autofocus"
+        android:required="false" />
     <!-- <paths xmlns:android="http://schemas.android.com/apk/res/android">
          <external-files-path android:name="my_images" android:path="Android/data/com.example.package.capgen/files/Pictures" />
      </paths> -->
@@ -18,7 +26,9 @@
          android:label="@string/app_name"
          android:roundIcon="@mipmap/ic_launcher_round"
          android:supportsRtl="true"
-         android:theme="@style/AppTheme">
+         android:theme="@style/AppTheme"
+         android:networkSecurityConfig="@xml/network_security_config"
+         >
          <provider
              android:name="androidx.core.content.FileProvider"
              android:authorities="com.example.android.fileprovider"
@@ -34,6 +44,12 @@
 
                  <category android:name="android.intent.category.LAUNCHER" />
              </intent-filter>
+         </activity>
+         <activity
+             android:name=".captionBot"
+             android:label="@string/app_name"
+             >
+
          </activity>
      </application>
 
