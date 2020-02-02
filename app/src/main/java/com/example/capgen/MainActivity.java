@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -50,7 +51,10 @@ import static androidx.core.content.FileProvider.getUriForFile;
 
 
 
+
 public class MainActivity extends AppCompatActivity {
+    //captionBot cBot = new captionBot();
+
     static final int REQUEST_IMAGE_CAPTURE = 1;
     private ImageView imageView;
     Button buttonCamera, buttonGallery;
@@ -104,8 +108,8 @@ public class MainActivity extends AppCompatActivity {
                 photoURI = FileProvider.getUriForFile(this,
                         "com.example.android.fileprovider",
                         photoFile);
-                encodedURI = photoURI.getEncodedAuthority();
-                Log.d("Encoded URI: ", encodedURI);
+                //encodedURI = photoURI.getEncodedAuthority();
+                //Log.d("Encoded URI: ", encodedURI);
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
 
                 startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
@@ -175,6 +179,9 @@ public class MainActivity extends AppCompatActivity {
 
 
     String[] terms = new String[2];
+    public String[] getTerms() {
+        return terms;
+    }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
@@ -186,10 +193,9 @@ public class MainActivity extends AppCompatActivity {
             }*/
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                String out[] = new String[2];
                 try {
+                    //terms = detectWebDetections(photoURI.toString(), terms);
                     startActivity(new Intent(MainActivity.this, captionBot.class));
-                    detectWebDetections(currentPhotoPath, out);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -228,12 +234,13 @@ public class MainActivity extends AppCompatActivity {
      * @throws Exception on errors while closing the client.
      * @throws IOException on Input/Output errors.
      */
-    //filePath = currentPhotoPath when called, output gets array which calls code to find quotes in DB
-    public static String[] detectWebDetections(String filePath, String[] out) throws Exception,
-            Exception {
-        List<AnnotateImageRequest> requests = new ArrayList<>();
 
-        ByteString imgBytes = ByteString.readFrom(new FileInputStream(filePath));
+
+    //filePath = currentPhotoPath when called, output gets array which calls code to find quotes in DB
+    public String[] detectWebDetections(String filePath, String[] out) throws IOException  {
+        List<AnnotateImageRequest> requests = new ArrayList<>();
+        FileInputStream inputStream = new FileInputStream(filePath);
+        ByteString imgBytes = ByteString.readFrom(inputStream);
 
         Image img = Image.newBuilder().setContent(imgBytes).build();
         Feature feat = Feature.newBuilder().setType(Type.WEB_DETECTION).build();
