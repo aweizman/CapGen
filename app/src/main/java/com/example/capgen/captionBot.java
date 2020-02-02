@@ -172,7 +172,8 @@ public class captionBot extends Activity {
 			quotes[0] = "I like this.";
 			quotes[1] = "Lorem ipsum";
 		}
-		Log.d("Quote: ", quotes[hold]);
+		Log.d("Quote 1: ", quotes[0]);
+		Log.d("Quote 2: ", quotes[1]);
 		((TextView)findViewById(R.id.textCaption)).setText(quotes[hold]);
 
 	}
