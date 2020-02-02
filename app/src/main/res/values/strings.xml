@@ -4,5 +4,6 @@
     <string name="capgen">CapGen</string>
     <string name="take_a_phot">Take a Photo</string>
     <string name="gallery">Choose from Gallery</string>
+    <string name="back">Back</string>
 </resources>
 
