@@ -28,6 +28,7 @@ import android.provider.MediaStore;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -65,15 +66,16 @@ public class captionBot extends Activity {
 		}*/
 
         imgView.setImageURI(main.getPhotoURI());
-        imgURI = main.getPhotoURI();
-        String imgURIString = imgURI.getPath();
+
+        //String imgURIString = imgURI.getPath();
 		String terms[] = new String[2];
 
-
+            main.setPhotoURI(Uri.parse(main.getPhotoPath()));
+            imgURI = main.getPhotoURI();
 			Log.d("From: ", imgURI.toString());
-			Log.d("looking at: ", imgURIString);
+			//Log.d("looking at: ", imgURIString);
 		try {
-			terms = main.detectWebDetections(imgURIString, terms);
+			terms = main.detectWebDetections(imgURI.toString(), terms);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -114,7 +116,7 @@ public class captionBot extends Activity {
 		String inWord2 = args[1];
 		//Random lineMaker = new Random();
 		BufferedReader reader;
-		Vector quotes = new Vector();
+		String[] quotes = {null, null};
 
 		// List<String> lines = Files.readAllLines(Paths.get("quotes.txt"));
 		// while(lines.hasMoreElements()){
@@ -129,18 +131,23 @@ public class captionBot extends Activity {
 		try {
 			reader = new BufferedReader(new FileReader("quotes.txt"));
 			String line = reader.readLine();
+			int i = 0;
 			while (line != null) {
 				if (line.contains(inWord1) || line.contains(inWord2)) {
-					quotes.add(line);
+					quotes[i] = line;
 					Log.d("Quotes:", line);
 				}
 				line = reader.readLine();
+				i++;
+				if (i==2){
+					break;
+				}
 			}
 
 			reader.close();
 
-			Log.d("Quote 0: ", quotes.get(0).toString());
-			Log.d("Quote 1: ", quotes.get(1).toString());
+			Log.d("Quote 0: ", quotes[0]);
+			Log.d("Quote 1: ", quotes[1]);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -161,8 +168,12 @@ public class captionBot extends Activity {
 		Log.d("Decider: ", deciderString);
 
 		int hold = Integer.parseInt(deciderString) % 2;
-		Log.d("Quote: ", quotes.get(hold).toString());
-
+		if(quotes[0] == null && quotes[1] == null){
+			quotes[0] = "I like this.";
+			quotes[1] = "Lorem ipsum";
+		}
+		Log.d("Quote: ", quotes[hold]);
+		((TextView)findViewById(R.id.textCaption)).setText(quotes[hold]);
 
 	}
 }

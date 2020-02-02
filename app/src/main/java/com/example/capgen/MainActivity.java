@@ -4,6 +4,7 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 
+import android.app.usage.NetworkStats;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -28,6 +29,9 @@ import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import com.google.api.client.util.Lists;
+import com.google.api.gax.paging.Page;
+import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.vision.v1.AnnotateImageRequest;
 import com.google.cloud.vision.v1.AnnotateImageResponse;
 import com.google.cloud.vision.v1.BatchAnnotateImagesResponse;
@@ -46,6 +50,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
+
+import io.grpc.Context;
 
 import static androidx.core.content.FileProvider.getUriForFile;
 
@@ -67,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }*/
 
-    String currentPhotoPath;
+    public String currentPhotoPath;
 
     private File createImageFile() throws IOException { //creates image file to save photo into storage
         // Create an image file name
@@ -88,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
     final int REQUEST_TAKE_PHOTO = 1;
 
     public static Uri photoURI;
-    String photoPath;
+    public static String photoPath;
     String encodedURI;
     private void dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -108,6 +114,7 @@ public class MainActivity extends AppCompatActivity {
                 photoURI = FileProvider.getUriForFile(this,
                         "com.example.android.fileprovider",
                         photoFile);
+
                 //encodedURI = photoURI.getEncodedAuthority();
                 //Log.d("Encoded URI: ", encodedURI);
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
@@ -206,6 +213,9 @@ public class MainActivity extends AppCompatActivity {
     public Uri getPhotoURI() {
         return photoURI;
     }
+    public void setPhotoURI(Uri foo) {
+        photoURI = foo;
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -276,6 +286,21 @@ public class MainActivity extends AppCompatActivity {
         }
         return out;
     }
+
+
+    /*static void authExplicit(String jsonPath) throws IOException {
+        // You can specify a credential file by providing a path to GoogleCredentials.
+        // Otherwise credentials are read from the GOOGLE_APPLICATION_CREDENTIALS environment variable.
+        GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream("C:\Users\AWeizman\Downloads\My First Project-d16a6569c1c7.json"))
+        .createScoped(Lists.newArrayList("https://www.googleapis.com/auth/cloud-platform"));
+        Context.Storage storage = StorageOptions.newBuilder().setCredentials(credentials).build().getService();
+
+        System.out.println("Buckets:");
+        Page<NetworkStats.Bucket> buckets = storage.list();
+        for (NetworkStats.Bucket bucket : buckets.iterateAll()) {
+            System.out.println(bucket.toString());
+        }
+    }*/
 /*    public void test(String filePath, PrintStream out) throws IOException {
         List<AnnotateImageRequest> requests = new ArrayList<>();
 
