@@ -5,13 +5,19 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -40,10 +46,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
 
+import static androidx.core.content.FileProvider.getUriForFile;
+
+
 
 public class MainActivity extends AppCompatActivity {
     static final int REQUEST_IMAGE_CAPTURE = 1;
     private ImageView imageView;
+    Button buttonCamera, buttonGallery;
 
 
    /* private void dispatchTakePictureIntent() { //will create the intent to take a picture w/ camera
@@ -71,8 +81,11 @@ public class MainActivity extends AppCompatActivity {
         return image;
     }
 
-    static final int REQUEST_TAKE_PHOTO = 1;
+    final int REQUEST_TAKE_PHOTO = 1;
 
+    public static Uri photoURI;
+    String photoPath;
+    String encodedURI;
     private void dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         // Ensure that there's a camera activity to handle the intent
@@ -86,14 +99,27 @@ public class MainActivity extends AppCompatActivity {
                 ex.printStackTrace();
             }
             // Continue only if the File was successfully created
+            photoPath = photoFile.getAbsolutePath();
             if (photoFile != null) {
-                Uri photoURI = FileProvider.getUriForFile(this,
+                photoURI = FileProvider.getUriForFile(this,
                         "com.example.android.fileprovider",
                         photoFile);
+                encodedURI = photoURI.getEncodedAuthority();
+                Log.d("Encoded URI: ", encodedURI);
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+
                 startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
             }
         }
+    }
+
+    public String getPhotoPath () {
+        return photoPath;
+    }
+
+    Bitmap thumbnail;
+    public Bitmap getThumbnail() {
+        return thumbnail;
     }
 
     private void galleryAddPic() {
@@ -105,15 +131,64 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    private void selectFromGallery() {
+        Intent selectPhoto = new Intent(Intent.ACTION_PICK,android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        Uri selectedImage = selectPhoto.getData();
+        String[] filePath = { MediaStore.Images.Media.DATA };
+        Cursor c = getContentResolver().query(selectedImage,filePath, null, null, null);
+        int columnIndex;
+        String picturePath = null;
+        if( c != null && c.moveToFirst() ){
+            columnIndex = c.getColumnIndex(filePath[0]);
+            picturePath = c.getString(columnIndex);
+            c.close();
+        }
+        if (picturePath != null) {
+            thumbnail = (BitmapFactory.decodeFile(picturePath));
+        }
+        startActivity(new Intent(MainActivity.this, captionBot.class));
+    }
+
+    private void setPic() {
+        // Get the dimensions of the View
+        int targetW = imageView.getWidth();
+        int targetH = imageView.getHeight();
+
+        // Get the dimensions of the bitmap
+        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+        bmOptions.inJustDecodeBounds = true;
+
+        int photoW = bmOptions.outWidth;
+        int photoH = bmOptions.outHeight;
+
+        // Determine how much to scale down the image
+        int scaleFactor = Math.min(photoW/targetW, photoH/targetH);
+
+        // Decode the image file into a Bitmap sized to fill the View
+        bmOptions.inJustDecodeBounds = false;
+        bmOptions.inSampleSize = scaleFactor;
+        bmOptions.inPurgeable = true;
+
+        Bitmap bitmap = BitmapFactory.decodeFile(currentPhotoPath, bmOptions);
+        imageView.setImageBitmap(bitmap);
+    }
+
+
+    String[] terms = new String[2];
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            Bundle extras = data.getExtras();
-            Bitmap imageBitmap = (Bitmap) extras.get("data");
-            imageView.setImageBitmap(imageBitmap);
+            galleryAddPic();
+
+
+            /*if(extras != null){
+                setPic();
+            }*/
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                 String out[] = new String[2];
                 try {
+                    startActivity(new Intent(MainActivity.this, captionBot.class));
                     detectWebDetections(currentPhotoPath, out);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -122,11 +197,26 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
+    public Uri getPhotoURI() {
+        return photoURI;
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        buttonCamera = (Button) findViewById(R.id.buttonCamera);
+        buttonGallery = (Button) findViewById(R.id.buttonGallery);
+
+        buttonCamera.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dispatchTakePictureIntent();
+            }
+        });
+        buttonGallery.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) { selectFromGallery();}
+        });
     }
 //Vision Web Detection API
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
@@ -139,7 +229,7 @@ public class MainActivity extends AppCompatActivity {
      * @throws IOException on Input/Output errors.
      */
     //filePath = currentPhotoPath when called, output gets array which calls code to find quotes in DB
-    public static void detectWebDetections(String filePath, String[] out) throws Exception,
+    public static String[] detectWebDetections(String filePath, String[] out) throws Exception,
             Exception {
         List<AnnotateImageRequest> requests = new ArrayList<>();
 
@@ -158,7 +248,7 @@ public class MainActivity extends AppCompatActivity {
             for (AnnotateImageResponse res : responses) {
                 if (res.hasError()) {
                     out[0] = ("Error: " + res.getError().getMessage());
-                    return;
+                    return out;
                 }
 
                 // Search the web for usages of the image. You could use these signals later
@@ -177,6 +267,7 @@ public class MainActivity extends AppCompatActivity {
 
             }
         }
+        return out;
     }
 /*    public void test(String filePath, PrintStream out) throws IOException {
         List<AnnotateImageRequest> requests = new ArrayList<>();
