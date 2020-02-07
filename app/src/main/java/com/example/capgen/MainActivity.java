@@ -4,6 +4,16 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 
+import android.widget.Toast;
+
+import com.karumi.dexter.Dexter;
+import com.karumi.dexter.MultiplePermissionsReport;
+import com.karumi.dexter.PermissionToken;
+import com.karumi.dexter.listener.DexterError;
+import com.karumi.dexter.listener.PermissionRequest;
+import com.karumi.dexter.listener.PermissionRequestErrorListener;
+import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
+
 import android.app.usage.NetworkStats;
 import android.content.Intent;
 import android.database.Cursor;
@@ -20,6 +30,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -27,6 +38,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 
 import com.google.api.client.util.Lists;
@@ -50,6 +62,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
+import android.media.MediaScannerConnection;
 
 import io.grpc.Context;
 
@@ -62,7 +75,9 @@ public class MainActivity extends AppCompatActivity {
     //captionBot cBot = new captionBot();
 
     static final int REQUEST_IMAGE_CAPTURE = 1;
+    static final int GALLERY = 2;
     private ImageView imageView;
+    private static final String IMAGE_DIRECTORY = "/../res/drawable";
     Button buttonCamera, buttonGallery;
 
     public String currentPhotoPath;
@@ -128,9 +143,41 @@ public class MainActivity extends AppCompatActivity {
         this.sendBroadcast(mediaScanIntent);
     }
 
+    public String saveImage(Bitmap myBitmap) {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        myBitmap.compress(Bitmap.CompressFormat.JPEG, 90, bytes);
+        File wallpaperDirectory = new File(
+                Environment.getExternalStorageDirectory() + IMAGE_DIRECTORY);
+        // have the object build the directory structure, if needed.
+        if (!wallpaperDirectory.exists()) {
+            wallpaperDirectory.mkdirs();
+        }
+
+        try {
+            File f = new File(wallpaperDirectory, Calendar.getInstance()
+                    .getTimeInMillis() + ".jpg");
+            f.createNewFile();
+            FileOutputStream fo = new FileOutputStream(f);
+            fo.write(bytes.toByteArray());
+            MediaScannerConnection.scanFile(this,
+                    new String[]{f.getPath()},
+                    new String[]{"image/jpeg"}, null);
+            fo.close();
+            Log.d("TAG", "File Saved::---&gt;" + f.getAbsolutePath());
+
+            return f.getAbsolutePath();
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        }
+        return "";
+    }
+
 
     private void selectFromGallery() {
+        Intent galleryIntent = new Intent(Intent.ACTION_PICK,
+                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
 
+        startActivityForResult(galleryIntent, GALLERY);
     }
 
 
@@ -148,6 +195,21 @@ public class MainActivity extends AppCompatActivity {
                     startActivity(new Intent(MainActivity.this, captionBot.class));
                 } catch (Exception e) {
                     e.printStackTrace();
+                }
+            }
+        }
+        if (requestCode == GALLERY) {
+            if (data != null) {
+                Uri contentURI = data.getData();
+                try {
+                    Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), contentURI);
+                    String path = saveImage(bitmap);
+                    Toast.makeText(MainActivity.this, "Image Saved!", Toast.LENGTH_SHORT).show();
+                    //set image view in activity_caption.xml to bitmap
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    Toast.makeText(MainActivity.this, "Failed!", Toast.LENGTH_SHORT).show();
                 }
             }
         }
