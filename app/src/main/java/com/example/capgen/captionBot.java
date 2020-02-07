@@ -106,24 +106,14 @@ public class captionBot extends Activity {
 		});
 	}
 	public void main(String[] args) throws FileNotFoundException {
-		// File file = new File ("Desktop/google-cloud-sdk/quotes.txt");
+
 		String inWord1 = args[0];
 		String inWord2 = args[1];
-		//Random lineMaker = new Random();
+
 		FileInputStream fis=new FileInputStream("res/quotes.txt");
 		Scanner sc=new Scanner(fis);
 		String[] quotes = {null, null};
 
-		// List<String> lines = Files.readAllLines(Paths.get("quotes.txt"));
-		// while(lines.hasMoreElements()){
-		// 	line = lines.nextElement();
-		// 	if (line.contains(inWord)){
-		// 		quotes.addElement(line);
-		// 		}
-		// }
-
-
-		// BufferedReader reader;
 		String line = sc.nextLine();
 		Log.d("Line 0: ", line);
 		int i = 0;
@@ -140,6 +130,10 @@ public class captionBot extends Activity {
 		}
 
 		sc.close();
+		if(quotes[0] == null && quotes[1] == null){
+			quotes[0] = "I like this.";
+			quotes[1] = "Lorem ipsum";
+		}
 
 		Log.d("Quote 0: ", quotes[0]);
 		Log.d("Quote 1: ", quotes[1]);
@@ -160,10 +154,7 @@ public class captionBot extends Activity {
 		Log.d("Decider: ", deciderString);
 
 		int hold = Integer.parseInt(deciderString) % 2;
-		if(quotes[0] == null && quotes[1] == null){
-			quotes[0] = "I like this.";
-			quotes[1] = "Lorem ipsum";
-		}
+
 		Log.d("Quote 1: ", quotes[0]);
 		Log.d("Quote 2: ", quotes[1]);
 		((TextView)findViewById(R.id.textCaption)).setText(quotes[hold]);
