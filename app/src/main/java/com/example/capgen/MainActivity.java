@@ -65,14 +65,6 @@ public class MainActivity extends AppCompatActivity {
     private ImageView imageView;
     Button buttonCamera, buttonGallery;
 
-
-   /* private void dispatchTakePictureIntent() { //will create the intent to take a picture w/ camera
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
-        }
-    }*/
-
     public String currentPhotoPath;
 
     private File createImageFile() throws IOException { //creates image file to save photo into storage
@@ -128,11 +120,6 @@ public class MainActivity extends AppCompatActivity {
         return photoPath;
     }
 
-    Bitmap thumbnail;
-    public Bitmap getThumbnail() {
-        return thumbnail;
-    }
-
     private void galleryAddPic() {
         Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
         File f = new File(currentPhotoPath);
@@ -143,45 +130,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void selectFromGallery() {
-        Intent selectPhoto = new Intent(Intent.ACTION_PICK,android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        Uri selectedImage = selectPhoto.getData();
-        String[] filePath = { MediaStore.Images.Media.DATA };
-        Cursor c = getContentResolver().query(selectedImage,filePath, null, null, null);
-        int columnIndex;
-        String picturePath = null;
-        if( c != null && c.moveToFirst() ){
-            columnIndex = c.getColumnIndex(filePath[0]);
-            picturePath = c.getString(columnIndex);
-            c.close();
-        }
-        if (picturePath != null) {
-            thumbnail = (BitmapFactory.decodeFile(picturePath));
-        }
-        startActivity(new Intent(MainActivity.this, captionBot.class));
-    }
 
-    private void setPic() {
-        // Get the dimensions of the View
-        int targetW = imageView.getWidth();
-        int targetH = imageView.getHeight();
-
-        // Get the dimensions of the bitmap
-        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
-        bmOptions.inJustDecodeBounds = true;
-
-        int photoW = bmOptions.outWidth;
-        int photoH = bmOptions.outHeight;
-
-        // Determine how much to scale down the image
-        int scaleFactor = Math.min(photoW/targetW, photoH/targetH);
-
-        // Decode the image file into a Bitmap sized to fill the View
-        bmOptions.inJustDecodeBounds = false;
-        bmOptions.inSampleSize = scaleFactor;
-        bmOptions.inPurgeable = true;
-
-        Bitmap bitmap = BitmapFactory.decodeFile(currentPhotoPath, bmOptions);
-        imageView.setImageBitmap(bitmap);
     }
 
 
@@ -194,14 +143,8 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             galleryAddPic();
 
-
-            /*if(extras != null){
-                setPic();
-            }*/
-
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                 try {
-                    //terms = detectWebDetections(photoURI.toString(), terms);
                     startActivity(new Intent(MainActivity.this, captionBot.class));
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -286,87 +229,5 @@ public class MainActivity extends AppCompatActivity {
         }
         return out;
     }
-
-
-    /*static void authExplicit(String jsonPath) throws IOException {
-        // You can specify a credential file by providing a path to GoogleCredentials.
-        // Otherwise credentials are read from the GOOGLE_APPLICATION_CREDENTIALS environment variable.
-        GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream("C:\Users\AWeizman\Downloads\My First Project-d16a6569c1c7.json"))
-        .createScoped(Lists.newArrayList("https://www.googleapis.com/auth/cloud-platform"));
-        Context.Storage storage = StorageOptions.newBuilder().setCredentials(credentials).build().getService();
-
-        System.out.println("Buckets:");
-        Page<NetworkStats.Bucket> buckets = storage.list();
-        for (NetworkStats.Bucket bucket : buckets.iterateAll()) {
-            System.out.println(bucket.toString());
-        }
-    }*/
-/*    public void test(String filePath, PrintStream out) throws IOException {
-        List<AnnotateImageRequest> requests = new ArrayList<>();
-
-        ByteString imgBytes = ByteString.readFrom(new FileInputStream(filePath));
-
-        Image img = Image.newBuilder().setContent(imgBytes).build();
-        Feature feat = Feature.newBuilder().setType(Type.WEB_DETECTION).build();
-        AnnotateImageRequest request =
-                AnnotateImageRequest.newBuilder().addFeatures(feat).setImage(img).build();
-        requests.add(request);
-
-// Instantiates a client
-        try (ImageAnnotatorClient vision = ImageAnnotatorClient.create()) {
-
-            // The path to the image file to annotate
-            String fileName = currentPhotoPath;
-
-            // Reads the image file into memory
-            Path path = null;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                path = Paths.get(fileName);
-            }
-            byte[] data = new byte[0];
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                data = Files.readAllBytes(path);
-            }
-
-            // Performs label detection on the image file (maybe
-            BatchAnnotateImagesResponse response = vision.batchAnnotateImages(requests);
-            List<AnnotateImageResponse> responses = response.getResponsesList();
-
-            for (AnnotateImageResponse res : responses) {
-                if (res.hasError()) {
-                    System.out.printf("Error: %s\n", res.getError().getMessage());
-                    return;
-                }
-                WebDetection annotation = res.getWebDetection();
-                out.println("Entity:Id:Score");
-                out.println("===============");
-                for (WebDetection.WebEntity entity : annotation.getWebEntitiesList()) {
-                    out.println(entity.getDescription() + " : " + entity.getEntityId() + " : "
-                            + entity.getScore());
-                }
-                for (WebDetection.WebLabel label : annotation.getBestGuessLabelsList()) {
-                    out.format("\nBest guess label: %s", label.getLabel());
-                }
-                out.println("\nPages with matching images: Score\n==");
-                for (WebDetection.WebPage page : annotation.getPagesWithMatchingImagesList()) {
-                    out.println(page.getUrl() + " : " + page.getScore());
-                }
-                out.println("\nPages with partially matching images: Score\n==");
-                    out.println(image.getUrl() + " : " + image.getScore());
-                }
-                out.println("\nPages with fully matching images: Score\n==");
-                for (WebDetection.WebImage image : annotation.getFullMatchingImagesList()) {
-                    out.println(image.getUrl() + " : " + image.getScore());
-                }
-                out.println("\nPages with visually similar images: Score\n==");
-                for (WebDetection.WebImage image : annotation.getVisuallySimilarImagesList()) {
-                    out.println(image.getUrl() + " : " + image.getScore());
-                }
-            }
-
-            }
-        }
-
-        */
     }
 
